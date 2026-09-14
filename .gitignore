@@ -1,0 +1,17 @@
+# Vivado generated directories
+*.cache/
+*.hw/
+*.runs/
+*.sim/
+*.gen/
+*.ip_user_files/
+.Xil/
+
+# Vivado logs/temp
+*.jou
+*.log
+*.str
+
+# OS/editor junk
+.DS_Store
+*~
