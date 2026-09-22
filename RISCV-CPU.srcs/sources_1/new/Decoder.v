@@ -32,15 +32,15 @@
 */
 
 module Decoder(
-    input [6:0] Opcode ,
-    input [2:0] Funct3 ,
-    input [6:0] Funct7 ,
-    output [1:0] PCS,		// 00 for non-control, 01 for conditional branch, 10 for jal, 11 for jalr
-    output RegWrite,		// Asserted only by instructions which write to register file (load, auipc, lui, DPImm, DPReg);
-    output MemWrite,		// Asserted only by store (sw)
-    output MemtoReg,		// Asserted only by load (lw)
-    // output [1:0] ALUSrcA, 	// Needed for lui, auipic. Refer to the microarchitecture for its use. Uncomment wire and port map in RV.v as well
-    output ALUSrcB,		// Asserted by all instructions which use an immediate (load, store, lui, auipc, DPImm). Needs to be expanded to a 2-bit signal to support link functionality for jal, jalr. Change wire width in RV.v as well
+    input [6:0] Opcode ,    // Instr[6:0]
+    input [2:0] Funct3 ,    // Instr[14:12]
+    input [6:0] Funct7 ,    // Instr[31:25]
+    output reg [1:0] PCS,		// 00 for non-control, 01 for conditional branch, 10 for jal, 11 for jalr
+    output reg RegWrite,		// Asserted only by instructions which write to register file (load, auipc, lui, DPImm, DPReg);
+    output reg MemWrite,		// Asserted only by store (sw)
+    output reg MemtoReg,		// Asserted only by load (lw)
+    output reg [1:0] ALUSrcA, 	// Needed for lui, auipic. Refer to the microarchitecture for its use. Uncomment wire and port map in RV.v as well
+    output reg [1:0] ALUSrcB,		// Asserted by all instructions which use an immediate (load, store, lui, auipc, DPImm). Needs to be expanded to a 2-bit signal to support link functionality for jal, jalr. Change wire width in RV.v as well
     output reg [2:0] ImmSrc, 	// 000 for U, 010 for UJ, 011 for I, 110 for S, 111 for SB.
     output reg [3:0] ALUControl	// 0000 for add, 0001 for sub, 1110 for and, 1100 for or, 0010 for sll, 1010 for srl, 1011 for sra, 0001 for branch, 0000 for all others.
     					// Note that the most significant 3 bits are Funct3 for all DP instrns. LSB is the same as Funct[5] for DPReg type and DPImm_shifts. For other DPImms, Funct[5] is 0.
@@ -50,8 +50,118 @@ module Decoder(
 // A 2-1 multiplexing can be done easily using an assign with a ternary operator
 // For multiplexing with number of inputs > 2, a case construct within an always block is a natural fit. DO NOT to use nested ternary assignment operator as it hampers the readability of your code.
     
-    	// todo: Implement Decoder here
-	
+    // todo: Implement Decoder here
+	// this circuit is totally combinational.
+
+    always @(*) begin
+        case(Opcode)
+            7'h33: begin // DP Reg
+                PCS = 2'b00;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b00; // x0
+                ALUSrcB = 2'b00; // x0
+                ImmSrc = 3'b000; // xxx
+                ALUControl = {Funct3, Funct7[5]};
+            end
+            7'h13: begin // DP Immediate
+                PCS = 2'b00;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b00; // x0
+                ALUSrcB = 2'b11; 
+                ImmSrc = 3'b011;
+                if (funct3 == 3'h5) begin
+                    ALUControl = {Funct3, Funct7[5]}; // {Funct3, Immediate[10]}
+                end
+                else begin 
+                    ALUControl = {Funct3, 1'b0}; // {Funct3, 1'b0}
+                end
+            end
+            7'h03: begin // load
+                PCS = 2'b00;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b1;
+                ALUSrcA = 2'b00; // x0
+                ALUSrcB = 2'b11;
+                ImmSrc = 3'b011;
+                ALUControl = 4'b0000;
+            end
+            7'h23: begin // store
+                PCS = 2'b00;
+                RegWrite = 1'b0;
+                MemWrite = 1'b1;
+                MemtoReg = 1'b0; // x
+                ALUSrcA = 2'b00; // x0
+                ALUSrcB = 2'b11;
+                ImmSrc = 3'b110;
+                ALUControl = 4'b0000;
+            end
+            7'h63: begin // branch
+                PCS = 2'b01;
+                RegWrite = 1'b0;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0; // x
+                ALUSrcA = 2'b00; // x0
+                ALUSrcB = 2'b00; // x0
+                ImmSrc = 3'b111;
+                ALUControl = 4'b0001;
+            end
+            7'h6F: begin // jal
+                PCS = 2'b10;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b11;
+                ALUSrcB = 2'b01;
+                ImmSrc = 3'b010;
+                ALUControl = 4'b0000;
+            end
+            7'h17: begin // auipc
+                PCS = 2'b00;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b11;
+                ALUSrcB = 2'b11;
+                ImmSrc = 3'b000;
+                ALUControl = 4'b0000;
+            end
+            7'h37: begin // lui
+                PCS = 2'b00;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b01;
+                ALUSrcB = 2'b11;
+                ImmSrc = 3'b000;
+                ALUControl = 4'b0000;
+            end
+            7'h67: begin // jalr
+                PCS = 2'b11;
+                RegWrite = 1'b1;
+                MemWrite = 1'b0;
+                MemtoReg = 1'b0;
+                ALUSrcA = 2'b11;
+                ALUSrcB = 2'b01;
+                ImmSrc = 3'b011;
+                ALUControl = 4'b0000;
+            end
+            default: begin
+                PCS = 2'bx;
+                RegWrite = 1'bx;
+                MemWrite = 1'bx;
+                MemtoReg = 1'bx;
+                ALUSrcA = 2'bx;
+                ALUSrcB = 2'bx;
+                ImmSrc = 3'bx;
+                ALUControl = 4'bx;
+            end
+        endcase
+    end
 	    
 endmodule
 

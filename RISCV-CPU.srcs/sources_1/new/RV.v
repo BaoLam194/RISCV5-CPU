@@ -87,8 +87,8 @@ module RV #(
     wire RegWrite ;
     //wire MemWrite ;
     wire MemtoReg ;
-    //wire [1:0] ALUSrcA ;
-    wire ALUSrcB ;
+    wire [1:0] ALUSrcA ;
+    wire [1:0] ALUSrcB ;
     //wire [2:0] ImmSrc ;
     wire [3:0] ALUControl ;
 
@@ -96,11 +96,11 @@ module RV #(
     //wire [1:0] PCS
     //wire [2:0] Funct3;
     //wire [2:0] ALUFlags;
-    wire PCSrc;
+    wire [1:0] PCSrc;
       
     // ALU signals
-    wire [31:0] Src_A ;
-    wire [31:0] Src_B ;
+    reg [31:0] Src_A ;
+    reg [31:0] Src_B ;
     //wire [3:0] ALUControl ;
     //wire [31:0] ALUResult ;
     wire [2:0] ALUFlags ;
@@ -109,7 +109,7 @@ module RV #(
     //wire CLK ;
     //wire RESET ;
     wire WE_PC ;    
-    wire [31:0] PC_IN ;
+    reg [31:0] PC_IN ;
     //wire [31:0] PC ; 
         
     // Other internal signals here
@@ -128,6 +128,12 @@ module RV #(
     // todo: other datapath connections here
 	
     // Instantiate RegFile
+    assign rs1 = Instr[19:15];
+    assign rs2 = Instr[24:20];
+    assign rd = Instr[11:7];
+    assign WD = (MemtoReg == 0) ? ALUResult : ReadData;
+    assign WriteData = RD2;
+    assign WE = RegWrite;
     RegFile RegFile1( 
                     CLK,
                     WE,
@@ -140,6 +146,7 @@ module RV #(
                 );
                 
      // Instantiate Extend Module
+    assign InstrImm = Instr[31:7];
     Extend Extend1(
                     ImmSrc,
                     InstrImm,
@@ -147,6 +154,9 @@ module RV #(
                 );
                 
     // Instantiate Decoder
+    assign Funct3 = Instr[14:12];
+    assign Opcode = Instr[6:0];
+    assign Funct7 = Instr[31:25];
     Decoder Decoder1(
                     Opcode,
                     Funct3,
@@ -155,7 +165,7 @@ module RV #(
                     RegWrite,
                     MemWrite,
                     MemtoReg,
-                    //ALUSrcA,
+                    ALUSrcA,
                     ALUSrcB,
                     ImmSrc,
                     ALUControl
@@ -169,7 +179,22 @@ module RV #(
                     PCSrc
 		);
                 
-    // Instantiate ALU        
+    // Instantiate ALU
+    always @(*) begin
+        casez(ALUSrcA) 
+            2'b?0: Src_A = RD1;
+            2'b01: Src_A = 0;
+            2'b11: Src_A = PC;
+            default: Src_A = RD1;
+        endcase
+        casez(ALUSrcB) 
+            2'b?0: Src_B = RD2;
+            2'b01: Src_B = 4;
+            2'b11: Src_B = ExtImm;
+            default: Src_B = RD2;
+        endcase
+    
+    end
     ALU ALU1(
                     Src_A,
                     Src_B,
@@ -178,7 +203,17 @@ module RV #(
                     ALUFlags
                 );                
     
-    // Instantiate ProgramCounter    
+    // Instantiate ProgramCounter
+    always @(*) begin
+        case(PCSrc)
+            2'b00: PC_IN = PC + 4;
+            2'b10: PC_IN = PC + ExtImm;
+            2'b01: PC_IN = RD1 + 4;
+            2'b11: PC_IN = RD1 + ExtImm;
+            default: PC_IN = PC + 4;
+        endcase
+    end
+    assign WE_PC = 1; // right now no pipeline, just enable it
     ProgramCounter #(.PC_INIT(PC_INIT)) ProgramCounter1(
                     CLK,
                     RESET,
