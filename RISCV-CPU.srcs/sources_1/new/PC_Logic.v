@@ -53,7 +53,7 @@ module PC_Logic( // This is a combinational module, unlike ARM. See the note bel
 			2'b00: PCSrc = 2'b00; // No control
 			2'b01: begin // branch
 				PCSrc[1] = 1'b0;
-				case(Funct3):
+				case (Funct3)
 					3'b000: PCSrc[0] = ALUFlags[2];
 					3'b001: PCSrc[0] = ~ALUFlags[2];
 					3'b100: PCSrc[0] = ALUFlags[1];

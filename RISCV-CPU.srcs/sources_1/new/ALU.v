@@ -36,6 +36,7 @@ module ALU(
 	input [31:0] Src_B,
 	input [3:0] ALUControl, 
 	// 0000 for add, 0001 for sub, 1110 for and, 1100 for or, 0010 for sll, 1010 for srl, 1011 for sra.
+	// 0100 for slt, 0110 for sltu
 	output reg [31:0] ALUResult,
 	output [2:0] ALUFlags //{eq, lt, ltu}
 );
@@ -69,17 +70,21 @@ module ALU(
 				Src_B_comp = {1'b0, ~ Src_B} ;
 				ALUResult = S_wider[31:0] ;
 			end
+			4'b0100: ALUResult = ($signed(Src_A) < $signed(Src_B)) ? 1 :0; //slt
+			4'b0110: ALUResult = (Src_A < Src_B) ? 1 :0; //sltu
 	        4'b1110: ALUResult = Src_A & Src_B ;	// and
 	        4'b1100: ALUResult = Src_A | Src_B ; 	// or
-	            
+
 			// include cases for shifts		// shifts
 			default: ALUResult = 32'bx;
 	        endcase
 	    end
-      
-	assign Z = (ALUResult == 0) ? 1 : 0 ;
-    assign V = 
-	assign ALUFlags = {Z, 1'b0, 1'b0} ; 	//{eq, lt, ltu} - all except eq are placeholders. 
+    
+	assign N = ALUResult[31];
+	assign Z = (ALUResult == 0) ? 1 : 0;
+	assign C = ALUResult[32];
+    assign V = (Src_A[31] ^ Src_B[31]) & (Src_A[31] ^ ALUResult[31]);
+	assign ALUFlags = {Z, N ^ V, ~C} ; 	//{eq, lt, ltu} - all except eq are placeholders. 
     						// todo: Will need to be modified in lab 3 to support blt, bltu, bge, bgeu.
     
     
