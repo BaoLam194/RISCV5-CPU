@@ -60,9 +60,9 @@ module Decoder(
                 RegWrite = 1'b1;
                 MemWrite = 1'b0;
                 MemtoReg = 1'b0;
-                ALUSrcA = 2'b00; // x0
-                ALUSrcB = 2'b00; // x0
-                ImmSrc = 3'b000; // xxx
+                ALUSrcA = 2'bX0; // x0
+                ALUSrcB = 2'bX0; // x0
+                ImmSrc = 3'bXXX; // xxx
                 ALUControl = {Funct3, Funct7[5]};
             end
             7'h13: begin // DP Immediate
@@ -70,10 +70,10 @@ module Decoder(
                 RegWrite = 1'b1;
                 MemWrite = 1'b0;
                 MemtoReg = 1'b0;
-                ALUSrcA = 2'b00; // x0
+                ALUSrcA = 2'bX0; // x0
                 ALUSrcB = 2'b11; 
                 ImmSrc = 3'b011;
-                if (funct3 == 3'h5) begin
+                if (Funct3 == 3'h5) begin
                     ALUControl = {Funct3, Funct7[5]}; // {Funct3, Immediate[10]}
                 end
                 else begin 
@@ -85,7 +85,7 @@ module Decoder(
                 RegWrite = 1'b1;
                 MemWrite = 1'b0;
                 MemtoReg = 1'b1;
-                ALUSrcA = 2'b00; // x0
+                ALUSrcA = 2'bX0; // x0
                 ALUSrcB = 2'b11;
                 ImmSrc = 3'b011;
                 ALUControl = 4'b0000;
@@ -94,8 +94,8 @@ module Decoder(
                 PCS = 2'b00;
                 RegWrite = 1'b0;
                 MemWrite = 1'b1;
-                MemtoReg = 1'b0; // x
-                ALUSrcA = 2'b00; // x0
+                MemtoReg = 1'bX; // x
+                ALUSrcA = 2'bX0; // x0
                 ALUSrcB = 2'b11;
                 ImmSrc = 3'b110;
                 ALUControl = 4'b0000;
@@ -104,9 +104,9 @@ module Decoder(
                 PCS = 2'b01;
                 RegWrite = 1'b0;
                 MemWrite = 1'b0;
-                MemtoReg = 1'b0; // x
-                ALUSrcA = 2'b00; // x0
-                ALUSrcB = 2'b00; // x0
+                MemtoReg = 1'bX; // x
+                ALUSrcA = 2'bX0; // x0
+                ALUSrcB = 2'bX0; // x0
                 ImmSrc = 3'b111;
                 ALUControl = 4'b0001;
             end
