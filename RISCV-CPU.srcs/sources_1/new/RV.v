@@ -207,8 +207,8 @@ module RV #(
     always @(*) begin
         case(PCSrc)
             2'b00: PC_IN = PC + 4;
-            2'b10: PC_IN = PC + ExtImm;
-            2'b01: PC_IN = RD1 + 4;
+            2'b10: PC_IN = RD1 + 4;
+            2'b01: PC_IN = PC + ExtImm;
             2'b11: PC_IN = RD1 + ExtImm;
             default: PC_IN = PC + 4;
         endcase
