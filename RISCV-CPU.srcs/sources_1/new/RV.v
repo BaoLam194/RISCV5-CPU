@@ -96,7 +96,7 @@ module RV #(
     //wire [1:0] PCS
     //wire [2:0] Funct3;
     //wire [2:0] ALUFlags;
-    wire PCSrc;
+    wire [1:0] PCSrc;
       
     // ALU signals
     reg [31:0] Src_A ;
@@ -114,6 +114,9 @@ module RV #(
         
     // Other internal signals here
     wire [31:0] Result ;
+    reg [31:0] PC_Base ;
+    reg [31:0] PC_Offset ;
+    wire [31:0] PC_Sum ;
     
     assign MemRead = MemtoReg; // This is needed for the proper functionality of some devices such as UART CONSOLE
     assign WE_PC = 1 ;  // Will need to control it for multi-cycle operations (Multiplication, Division) and/or Pipelining with hazard hardware.
@@ -136,7 +139,8 @@ module RV #(
 	assign WD = Result ;
 	assign Result = MemtoReg ? ReadData : ALUResult ;
 	assign WriteData = RD2 ;
-	assign PC_IN = PC + 32'd4 ;
+	assign PC_Sum = PC_Base + PC_Offset ;
+	assign PC_IN = (PCSrc == 2'b11) ? {PC_Sum[31:1], 1'b0} : PC_Sum ;
 
 	always@(*) begin
 		case(ALUSrcA)
@@ -151,6 +155,25 @@ module RV #(
 			2'b01: Src_B = ExtImm;
 			2'b10: Src_B = 32'd4;
 			default: Src_B = 32'd0;
+		endcase
+
+		case(PCSrc)
+			2'b00: begin
+				PC_Base = PC;
+				PC_Offset = 32'd4;
+			end
+			2'b01: begin
+				PC_Base = PC;
+				PC_Offset = ExtImm;
+			end
+			2'b11: begin
+				PC_Base = RD1;
+				PC_Offset = ExtImm;
+			end
+			default: begin
+				PC_Base = PC;
+				PC_Offset = 32'd4;
+			end
 		endcase
 	end
 	

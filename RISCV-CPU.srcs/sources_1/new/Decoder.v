@@ -52,6 +52,8 @@ module Decoder(
 	localparam OP_REG = 7'b0110011;
 	localparam OP_IMM = 7'b0010011;
 	localparam AUIPC  = 7'b0010111;
+	localparam JAL    = 7'b1101111;
+	localparam JALR   = 7'b1100111;
 
 	always@(*) begin
 		// Safe defaults: unsupported instructions cannot change architectural state.
@@ -119,10 +121,29 @@ module Decoder(
 				ALUControl = 4'b0000;
 			end
 
+			JAL: begin
+				PCS = 2'b10;
+				RegWrite = 1'b1;
+				ALUSrcA = 2'b01;
+				ALUSrcB = 2'b10;
+				ImmSrc = 3'b010;
+				ALUControl = 4'b0000;
+			end
+
+			JALR: begin
+				if(Funct3 == 3'b000) begin
+					PCS = 2'b11;
+					RegWrite = 1'b1;
+					ALUSrcA = 2'b01;
+					ALUSrcB = 2'b10;
+					ImmSrc = 3'b011;
+					ALUControl = 4'b0000;
+				end
+			end
+
 			default: ;
 		endcase
 	end
 	    
 endmodule
-
 

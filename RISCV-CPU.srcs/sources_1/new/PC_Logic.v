@@ -35,7 +35,7 @@ module PC_Logic( // This is a combinational module, unlike ARM. See the note bel
 	input [1:0] PCS,	// 00 for non-control, 01 for conditional branch, 10 for jal, 11 for jalr
 	input [2:0] Funct3,	// condition specified in the instruction (eq / ne / lt / ge / ltu / geu)
 	input [2:0] ALUFlags, 	// {eq, lt, ltu}
-	output reg PCSrc	// will need to be expanded to 2 bits to support jalr
+	output reg [1:0] PCSrc	// 00 for PC+4, 01 for PC+ExtImm, 11 for RD1+ExtImm
     );
     
     /* 
@@ -45,12 +45,15 @@ module PC_Logic( // This is a combinational module, unlike ARM. See the note bel
     */
     
     
-	// todo: conditional logic goes here
-	
-	
+	always@(*) begin
+		case(PCS)
+			2'b10: PCSrc = 2'b01; // jal
+			2'b11: PCSrc = 2'b11; // jalr
+			default: PCSrc = 2'b00;
+		endcase
+	end
+
 endmodule
-
-
 
 
 
