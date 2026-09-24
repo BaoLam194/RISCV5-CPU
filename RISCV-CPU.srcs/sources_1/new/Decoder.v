@@ -144,6 +144,5 @@ module Decoder(
 			default: ;
 		endcase
 	end
-	    
-endmodule
 
+endmodule

@@ -37,7 +37,8 @@ module Wrapper
 #(
 	parameter N_LEDs_OUT = 8,        // Number of LEDs displaying Result. LED(15 downto 15-N_LEDs_OUT+1). 8 by default
 	parameter N_DIPs = 16,           // Number of DIPs. 16 by default
-	parameter N_PBs  = 3             // Number of PushButtons. 3 by default
+	parameter N_PBs  = 3,            // Number of PushButtons. 3 by default
+	parameter INIT_MEM = 1            // Set to 0 when a testbench loads IROM/DMEM directly
 		                             // [2:0] -> BTNL, BTNC, BTNR. Note that BTNU is used as PAUSE and BTND is used as RESET
 )
 (
@@ -153,8 +154,10 @@ initial begin
 // If you click Generate Bitstream after updating the .mem file, Vivado does not rerun synthesis using the new file, as it does not know that the file was modified externally. 
 	// Rerun the synthesis and then bitstream generation though Vivado says it is up to date. 
 	
-$readmemh("AA_IROM.mem", IROM);
-$readmemh("AA_DMEM.mem", DMEM);
+	if(INIT_MEM) begin
+		$readmemh("AA_IROM.mem", IROM);
+		$readmemh("AA_DMEM.mem", DMEM);
+	end
 // AA_DMEM.mem will generate a warning of having more than necessary data as the assembler dumps the entire data segment including DMEM and MMIO,
 	// This is ok as only the first part of it will be used to initialize DMEM.
 
