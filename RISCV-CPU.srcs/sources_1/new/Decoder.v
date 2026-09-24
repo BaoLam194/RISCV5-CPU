@@ -35,12 +35,12 @@ module Decoder(
     input [6:0] Opcode ,
     input [2:0] Funct3 ,
     input [6:0] Funct7 ,
-    output [1:0] PCS,		// 00 for non-control, 01 for conditional branch, 10 for jal, 11 for jalr
-    output RegWrite,		// Asserted only by instructions which write to register file (load, auipc, lui, DPImm, DPReg);
-    output MemWrite,		// Asserted only by store (sw)
-    output MemtoReg,		// Asserted only by load (lw)
-    // output [1:0] ALUSrcA, 	// Needed for lui, auipic. Refer to the microarchitecture for its use. Uncomment wire and port map in RV.v as well
-    output ALUSrcB,		// Asserted by all instructions which use an immediate (load, store, lui, auipc, DPImm). Needs to be expanded to a 2-bit signal to support link functionality for jal, jalr. Change wire width in RV.v as well
+    output reg [1:0] PCS,	// 00 for non-control, 01 for conditional branch, 10 for jal, 11 for jalr
+    output reg RegWrite,		// Asserted only by instructions which write to register file (load, auipc, lui, DPImm, DPReg);
+    output reg MemWrite,		// Asserted only by store (sw)
+    output reg MemtoReg,		// Asserted only by load (lw)
+    output reg [1:0] ALUSrcA,	// 00 for RD1, 01 for PC, 10 for zero
+    output reg [1:0] ALUSrcB,	// 00 for RD2, 01 for ExtImm, 10 for constant 4
     output reg [2:0] ImmSrc, 	// 000 for U, 010 for UJ, 011 for I, 110 for S, 111 for SB.
     output reg [3:0] ALUControl	// 0000 for add, 0001 for sub, 1110 for and, 1100 for or, 0010 for sll, 1010 for srl, 1011 for sra, 0001 for branch, 0000 for all others.
     					// Note that the most significant 3 bits are Funct3 for all DP instrns. LSB is the same as Funct[5] for DPReg type and DPImm_shifts. For other DPImms, Funct[5] is 0.
@@ -49,11 +49,80 @@ module Decoder(
 // Change wire to reg if assigned inside a procedural (always) block. However, where it is easy enough, use assign instead of always.
 // A 2-1 multiplexing can be done easily using an assign with a ternary operator
 // For multiplexing with number of inputs > 2, a case construct within an always block is a natural fit. DO NOT to use nested ternary assignment operator as it hampers the readability of your code.
-    
-    	// todo: Implement Decoder here
-	
+	localparam OP_REG = 7'b0110011;
+	localparam OP_IMM = 7'b0010011;
+	localparam AUIPC  = 7'b0010111;
+
+	always@(*) begin
+		// Safe defaults: unsupported instructions cannot change architectural state.
+		PCS = 2'b00;
+		RegWrite = 1'b0;
+		MemWrite = 1'b0;
+		MemtoReg = 1'b0;
+		ALUSrcA = 2'b00;
+		ALUSrcB = 2'b00;
+		ImmSrc = 3'b011;
+		ALUControl = 4'b0000;
+
+		case(Opcode)
+			OP_REG: begin
+				case(Funct3)
+					3'b001: begin
+						if(Funct7 == 7'b0000000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b0010; // sll
+						end
+					end
+					3'b101: begin
+						if(Funct7 == 7'b0000000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b1010; // srl
+						end
+						else if(Funct7 == 7'b0100000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b1011; // sra
+						end
+					end
+					default: ;
+				endcase
+			end
+
+			OP_IMM: begin
+				ALUSrcB = 2'b01;
+				ImmSrc = 3'b011;
+				case(Funct3)
+					3'b001: begin
+						if(Funct7 == 7'b0000000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b0010; // slli
+						end
+					end
+					3'b101: begin
+						if(Funct7 == 7'b0000000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b1010; // srli
+						end
+						else if(Funct7 == 7'b0100000) begin
+							RegWrite = 1'b1;
+							ALUControl = 4'b1011; // srai
+						end
+					end
+					default: ;
+				endcase
+			end
+
+			AUIPC: begin
+				RegWrite = 1'b1;
+				ALUSrcA = 2'b01;
+				ALUSrcB = 2'b01;
+				ImmSrc = 3'b000;
+				ALUControl = 4'b0000;
+			end
+
+			default: ;
+		endcase
+	end
 	    
 endmodule
-
 
 
