@@ -82,7 +82,7 @@ module ALU(
     
 	assign N = ALUResult[31];
 	assign Z = (ALUResult == 0) ? 1 : 0;
-	assign C = ALUResult[32];
+	assign C = S_wider[32];
     assign V = (Src_A[31] ^ Src_B[31]) & (Src_A[31] ^ ALUResult[31]);
 	assign ALUFlags = {Z, N ^ V, ~C} ; 	//{eq, lt, ltu} - all except eq are placeholders. 
     						// todo: Will need to be modified in lab 3 to support blt, bltu, bge, bgeu.
