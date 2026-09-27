@@ -49,7 +49,7 @@ module Decoder(
 // Change wire to reg if assigned inside a procedural (always) block. However, where it is easy enough, use assign instead of always.
 // A 2-1 multiplexing can be done easily using an assign with a ternary operator
 // For multiplexing with number of inputs > 2, a case construct within an always block is a natural fit. DO NOT to use nested ternary assignment operator as it hampers the readability of your code.
-    
+
     // todo: Implement Decoder here
 	// this circuit is totally combinational.
 
@@ -71,12 +71,12 @@ module Decoder(
                 MemWrite = 1'b0;
                 MemtoReg = 1'b0;
                 ALUSrcA = 2'bX0; // x0
-                ALUSrcB = 2'b11; 
+                ALUSrcB = 2'b11;
                 ImmSrc = 3'b011;
                 if (Funct3 == 3'h5) begin
                     ALUControl = {Funct3, Funct7[5]}; // {Funct3, Immediate[10]}
                 end
-                else begin 
+                else begin
                     ALUControl = {Funct3, 1'b0}; // {Funct3, 1'b0}
                 end
             end
@@ -162,8 +162,5 @@ module Decoder(
             end
         endcase
     end
-	    
+
 endmodule
-
-
-

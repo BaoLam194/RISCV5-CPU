@@ -48,7 +48,7 @@ module PC_Logic( // This is a combinational module, unlike ARM. See the note bel
 	// todo: conditional logic goes here
 	// This circuit is totally combinational
 
-	always @(*) begin 
+	always @(*) begin
 		case (PCS)
 			2'b00: PCSrc = 2'b00; // No control
 			2'b01: begin // branch
@@ -66,14 +66,10 @@ module PC_Logic( // This is a combinational module, unlike ARM. See the note bel
 			2'b10: PCSrc = 2'b01; // jal
 			2'b11: PCSrc = 2'b11; // jalr
 			default: PCSrc = 2'bx;
-		endcase	
-	end 
-	
+		endcase
+	end
+
 endmodule
-
-
-
-
 
 
 
