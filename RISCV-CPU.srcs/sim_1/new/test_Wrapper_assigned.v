@@ -3,10 +3,6 @@
 ----------------------------------------------------------------------------------
 Self-checking testbench for the assigned RV32I instructions:
 sll, srl, sra, slli, srli, srai, auipc, jal, and jalr.
-
-AI assistance declaration: OpenAI Codex (GPT-5).
-Prompt summary: implement the assigned RV32I instructions using the slide 23
-datapath, keep the design modular, and write a self-checking testbench.
 ----------------------------------------------------------------------------------
 */
 
