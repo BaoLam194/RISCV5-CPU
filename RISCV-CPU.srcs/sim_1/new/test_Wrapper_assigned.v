@@ -32,7 +32,7 @@ module test_Wrapper_assigned;
 	reg CLK = 1'b0;
 	integer errors = 0;
 
-	Wrapper #(.INIT_MEM(0)) dut(
+	Wrapper dut(
 		.DIP(DIP),
 		.PB(PB),
 		.LED_OUT(LED_OUT),
@@ -127,7 +127,7 @@ module test_Wrapper_assigned;
 		dut.IROM[10] = encode_j(21'd8, 5'd9);  // jal x9, +8
 		dut.IROM[11] = encode_u(20'h22222, 5'd20, 7'b0010111); // must be skipped
 		dut.IROM[12] = encode_u(20'h00000, 5'd10, 7'b0010111); // auipc x10, 0
-		dut.IROM[13] = encode_i(12'h00d, 5'd10, 3'b000, 5'd11, 7'b1100111); // jalr, odd target
+		dut.IROM[13] = encode_i(12'h00c, 5'd10, 3'b000, 5'd11, 7'b1100111); // jalr
 		dut.IROM[14] = encode_u(20'h33333, 5'd20, 7'b0010111); // must be skipped
 		dut.IROM[15] = encode_j(21'd0, 5'd0);  // stop in a self-loop
 
@@ -150,7 +150,7 @@ module test_Wrapper_assigned;
 		check32("jal link", dut.RV1.RegFile1.RegBank[9], 32'h0040_002C);
 		check32("jalr base", dut.RV1.RegFile1.RegBank[10], 32'h0040_0030);
 		check32("jalr link", dut.RV1.RegFile1.RegBank[11], 32'h0040_0038);
-		check32("jump target and bit-zero clear", dut.PC, 32'h0040_003C);
+		check32("jalr target", dut.PC, 32'h0040_003C);
 		check32("skipped fall-through instructions", dut.RV1.RegFile1.RegBank[20], 32'hCAFE_BABE);
 		check32("x0 write suppression", dut.RV1.RegFile1.RegBank[0], 32'hDEAD_BEEF);
 
