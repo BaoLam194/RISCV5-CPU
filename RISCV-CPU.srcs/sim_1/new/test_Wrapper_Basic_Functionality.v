@@ -1,35 +1,28 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 23.09.2026 22:02:37
-// Design Name: 
-// Module Name: test_Wrapper
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Tesing for RV32I Instructions
+// lui, addi
+// and(i), or(i), slt(i), sltu(i)
+// lw, sw
+// The assert is delayed 1 cycle because writing only happens at next cycle
 //////////////////////////////////////////////////////////////////////////////////
 
 // Mimicthe test_Wrapper_DIP_to_LED file
 // File usage Basic_Functionality.asm
 
-`define ERROR(msg) \
+integer error_count = 0;
+
+
+`define ERROR(msg, expected, result) \
     begin \
-    $display(""); \
-    $display("============================================================"); \
-    $display("                    SOME TEST FAILED"); \
-    $display("============================================================"); \
-    $error("  Instruction check failed: %s",msg); \
-    $display("============================================================"); \
+        error_count = error_count + 1; \
+        $display(""); \
+        $display("============================================================"); \
+        $display("                    SOME TEST FAILED"); \
+        $display("============================================================"); \
+        $error("        Instruction check failed: %s",msg); \
+        $display("        Expected: %h, got %h.", expected, result); \
+        $display("============================================================"); \
     end
 
 module test_Wrapper_BF #(
@@ -70,24 +63,111 @@ module test_Wrapper_BF #(
     initial
     begin
         RESET = 1; #10; RESET = 0; //hold reset state for 10 ns.
+        #30
+        assert(dut.RV1.RegFile1.RegBank[8] === 32'hffff0000) else `ERROR("li s0, MMIO_BASE instrution is failed", 32'hffff0000, dut.RV1.RegFile1.RegBank[8]);
+        #30; // the "and" instruction is executed,
         
-        #80; // the "and" instruction is executed,
         #10; // the "andi" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[14] === 32'h40) else `ERROR("and instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[14] === 32'h40) else `ERROR("and instrution is failed", 32'h40, dut.RV1.RegFile1.RegBank[14]);
+        
         #10; // the "or" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[15] === 32'h58) else `ERROR("andi instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[15] === 32'h58) else `ERROR("andi instrution is failed", 32'h58, dut.RV1.RegFile1.RegBank[15]);
+        
         #10; // the "ori" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[16] === 32'hfffffff8) else `ERROR("or instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[16] === 32'hfffffff8) else `ERROR("or instrution is failed", 32'hfffffff8, dut.RV1.RegFile1.RegBank[16]);
+        
         #10; // the "slt" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[17] === 32'h404) else `ERROR("ori instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[17] === 32'h404) else `ERROR("ori instrution is failed", 32'h404, dut.RV1.RegFile1.RegBank[17]);
+        
         #10; // the "slt" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[24] === 32'h1) else `ERROR("slt instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[24] === 32'h1) else `ERROR("slt instrution is failed", 32'h1, dut.RV1.RegFile1.RegBank[24]);
+       
         #10; // the "sltu" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[25] === 32'h0) else `ERROR("slt instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[25] === 32'h0) else `ERROR("slt instrution is failed", 32'h0, dut.RV1.RegFile1.RegBank[25]);
+        
         #10; // the "sltu" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[26] === 32'h1) else `ERROR("sltu instrution is failed");
-        #10; // the "sltu" instruction is executed,
-        assert(dut.RV1.RegFile1.RegBank[27] === 32'h0) else `ERROR("sltu instrution is failed");
+        assert(dut.RV1.RegFile1.RegBank[26] === 32'h1) else `ERROR("sltu instrution is failed", 32'h1, dut.RV1.RegFile1.RegBank[26]);
+        
+        #10; // la instruction line 72
+        assert(dut.RV1.RegFile1.RegBank[27] === 32'h0) else `ERROR("sltu instrution is failed", 32'h0, dut.RV1.RegFile1.RegBank[27]);
+        
+        #20; // lw instruction is executed
+        assert(dut.RV1.RegFile1.RegBank[9] === 32'h10010000) else `ERROR("la instrution is failed", 32'h10010000, dut.RV1.RegFile1.RegBank[9]);
+
+        #10; // sub instruction line 74 is executed        
+        #10; // sw instruction line 75 is executed
+        assert(dut.RV1.RegFile1.RegBank[18] === 32'h2) else `ERROR("lw instrution is failed", 32'h2, dut.RV1.RegFile1.RegBank[18]);
+
+        #10; // slti instruction line 76 is executed
+        assert(dut.RV1.RegFile1.RegBank[18] === 32'h2) else `ERROR("sw instrution is failed", 32'h2, dut.RV1.RegFile1.RegBank[18]);
+
+        #10; // sltiu instruction line 77 is executed
+        assert(dut.RV1.RegFile1.RegBank[19] === 32'h0) else `ERROR("slti instrution is failed", 32'h0, dut.RV1.RegFile1.RegBank[19]);
+
+        #10; // xor instruction line 78 is executed
+        assert(dut.RV1.RegFile1.RegBank[20] === 32'h1) else `ERROR("sltiu instrution is failed", 32'h1, dut.RV1.RegFile1.RegBank[20]);
+        
+        #10; // xori instruction line 79 is executed
+        assert(dut.RV1.RegFile1.RegBank[21] === 32'h3) else `ERROR("xor instrution is failed", 32'h3, dut.RV1.RegFile1.RegBank[21]);
+
+        #10; // beq instruction line 80 is executed
+        assert(dut.RV1.RegFile1.RegBank[22] === 32'h5) else `ERROR("xori instrution is failed", 32'h5, dut.RV1.RegFile1.RegBank[22]);
+
+        #10; // beq instruction line 81 is executed
+        assert(dut.RV1.PC === 32'h00400060) else `ERROR("beq instrution is failed", 32'h00400060, dut.RV1.PC);
+       
+        #10; // bne instruction line 84 is executed
+        assert(dut.RV1.PC === 32'h00400068) else `ERROR("bne instrution is failed", 32'h00400068, dut.RV1.PC);
+
+        #10; // bne instruction line 85 is executed
+        assert(dut.RV1.PC === 32'h0040006c) else `ERROR("bne instrution is failed", 32'h0040006c, dut.RV1.PC);
+
+        #10; // blt instruction line 88 is executed
+        assert(dut.RV1.PC === 32'h00400074) else `ERROR("blt instrution is failed", 32'h00400074, dut.RV1.PC);
+
+        #10; // blt instruction line 89 is executed
+        assert(dut.RV1.PC === 32'h00400078) else `ERROR("blt instrution is failed", 32'h00400078, dut.RV1.PC);
+
+        #10; // bge instruction line 92 is executed
+        assert(dut.RV1.PC === 32'h00400080) else `ERROR("bge instrution is failed", 32'h00400080, dut.RV1.PC);
+
+        #10; // bge instruction line 93 is executed
+        assert(dut.RV1.PC === 32'h00400084) else `ERROR("bge instrution is failed", 32'h00400084, dut.RV1.PC);
+
+        #10; // bltu instruction line 96 is executed
+        assert(dut.RV1.PC === 32'h0040008c) else `ERROR("bltu instrution is failed", 32'h0040008c, dut.RV1.PC);
+
+        #10; // bltu instruction line 97 is executed
+        assert(dut.RV1.PC === 32'h00400090) else `ERROR("bltu instrution is failed", 32'h00400090, dut.RV1.PC);        
+
+        #10; // bgeu instruction line 96 is executed
+        assert(dut.RV1.PC === 32'h00400098) else `ERROR("bgeu instrution is failed", 32'h00400098, dut.RV1.PC);
+
+        #10; // bgeu instruction line 97 is executed
+        assert(dut.RV1.PC === 32'h0040009c) else `ERROR("bgeu instrution is failed", 32'h0040009c, dut.RV1.PC);   
+
+        #10; // nop
+        assert(dut.RV1.RegFile1.RegBank[8] === 32'hffff0000) else `ERROR("probably some branching fails", 32'hffff0000, dut.RV1.RegFile1.RegBank[8]);
+
+        // ---------------------------------------------------------
+        // TEST SUMMARY
+        // ---------------------------------------------------------
+        $display("");
+        $display("============================================================");
+        $display("                       TEST SUMMARY");
+        $display("============================================================");
+        $display("Total errors: %0d", error_count);
+
+        if (error_count == 0) begin
+            $display("                    ALL TESTS PASSED");
+        end
+        else begin
+            $display("                    TESTS FAILED");
+        end
+
+        $display("============================================================");
+
+        $finish;
 	end
 	// GENERATE CLOCK       
     always          
