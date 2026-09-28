@@ -10,6 +10,17 @@
 #--		(vi) retain this notice in this file and any files derived from this.
 #----------------------------------------------------------------------------------
 
+
+//////////////////////////////////////////////////////////////////////////////////
+// Tesing for RV32I Instructions
+// lui, addi,
+// and(i), or(i), slt(i), sltu(i)
+// auipc, lw
+// sub
+// auipc, sw
+// The assert is delayed 1 cycle because writing only happens at next cycle
+//////////////////////////////////////////////////////////////////////////////////
+
 # This sample program for RISC-V simulation using RARS
 
 # Memory this program needs: IROM_DEPTH_BITS 9, DMEM_DEPTH_BITS 9
@@ -46,8 +57,6 @@
 main:
 	li s0, MMIO_BASE		# MMIO_BASE. Implemented as lui+addi
 	# Could have done lw s0,MMIO_BASE (ARM style) instead of the li above, provided MMIO_BASE: .word 0xFFFF0000 was declared in the .data (DMEM) section instead of .eqv
-	li  s2, DIP_OFF			# note that this li doesn't translate to lui, unlike the li in line 41.
-	add s2, s0, s2			# DIP address = MMIO_BASE + DIP_OFF. Could have been done in a way similar to LED address, but done this way to have a DP reg instruction
 	li a0, 100
     li a1, 67
     li a2, -8
@@ -60,6 +69,43 @@ main:
     slt s9, a3, a0 			# 0
     sltu s10, a3, a2		# 1
     sltu s11, a0, a1 		# 0
+    la s1, delay_val        # 0x10010000
+    lw s2, 0(s1)            # 3
+    sub s2, s2, s8			# 2
+    sw s2, 0(s1)			# 2
+    slti s3, s2, 1 			# 0
+    sltiu s4, s2, -8 		# 1
+    xor s5, s2, s4			# 3
+    xori s6, s2, 7  		# 5
+	beq s3, s4, finish 		# 0 == 1 ?
+	beq s2, s2, beq_skip
+  	addi s0, s0, 1
+beq_skip:
+	bne s2, s2, finish		# 2 != 2 ?
+	bne s3, s4, bne_skip
+  	addi s0, s0, 1
+bne_skip:
+	blt s3, a2, finish		# 0 < -8 ?
+	blt a2, s3, blt_skip
+  	addi s0, s0, 1
+blt_skip:
+	bge a2, s3, finish 		# -8 > 0?
+	bge s4, s3, bge_skip
+    addi s0, s0, 1
+bge_skip:
+	bltu a2, s3, finish 		# unsigned(-8) < 0 ?
+    bltu s3, a2, bltu_skip
+  	addi s0, s0, 1
+bltu_skip:
+	bgeu s3, a2, finish 		# 0 > unsigned(-8) ?
+    bgeu a2, s3, bgeu_skip
+	addi s0, s0, 1
+bgeu_skip:
+    addi s1, s0, LED_OFF		# LED address
+	addi s2, s0, DIP_OFF		# DIP address
+    lw s4, (s2)                 # Reading DIPS
+    sw s4, (s1)                 # writing DIPS
+finish:
 	nop
 
 # ------- <code memory (Instruction Memory ROM) ends>			
@@ -71,7 +117,7 @@ main:
 
 DMEM:
 
-delay_val: .word 4	# a constant, at location DMEM+0x00
+delay_val: .word 3	# a constant, at location DMEM+0x00
 string1:
 .asciz "\r\nWelcome to CG3207..\r\n"	# string, from DMEM+0x4 to DMEM+0x18 (word address, including null character. The last character is at a byte address 0x1B).
 var1: .word	1 		# a statically allocated variable (which can have an initial value, say 1), at location DMEM+0x1C

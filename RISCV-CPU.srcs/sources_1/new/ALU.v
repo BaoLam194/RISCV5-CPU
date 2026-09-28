@@ -74,6 +74,7 @@ module ALU(
 			4'b0110: ALUResult = (Src_A < Src_B) ? 1 :0; //sltu
 	        4'b1110: ALUResult = Src_A & Src_B ;	// and
 	        4'b1100: ALUResult = Src_A | Src_B ; 	// or
+	        4'b1000: ALUResult = Src_A ^ Src_B ;    // xor
 			4'b0010: ALUResult = ShOut ;		// sll
 			4'b1010: ALUResult = ShOut ;		// srl
 			4'b1011: ALUResult = ShOut ;		// sra
