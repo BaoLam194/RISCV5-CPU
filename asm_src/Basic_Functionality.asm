@@ -98,8 +98,13 @@ bge_skip:
   	addi s0, s0, 1
 bltu_skip:
 	bgeu s3, a2, finish 		# 0 > unsigned(-8) ?
-    bgeu a2, s3, finish
+    bgeu a2, s3, bgeu_skip
 	addi s0, s0, 1
+bgeu_skip:
+    addi s1, s0, LED_OFF		# LED address
+	addi s2, s0, DIP_OFF		# DIP address
+    lw s4, (s2)                 # Reading DIPS
+    sw s4, (s1)                 # writing DIPS
 finish:
 	nop
 

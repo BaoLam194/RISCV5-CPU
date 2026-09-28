@@ -28,13 +28,14 @@ integer error_count = 0;
 module test_Wrapper_BF #(
 	   parameter N_LEDs_OUT	= 8,					
 	   parameter N_DIPs		= 16,
-	   parameter N_PBs		= 3 
+	   parameter N_PBs		= 3,
+       parameter init_DIPs  = 16'ha80f
 	)
 	(
 	);
 	
 	// Signals for the Unit Under Test (UUT)
-	reg  [N_DIPs-1:0] DIP = 0;		
+	reg  [N_DIPs-1:0] DIP = init_DIPs;		
 	reg  [N_PBs-1:0] PB = 0;			
 	wire [N_LEDs_OUT-1:0] LED_OUT;
 	wire [6:0] LED_PC;			
@@ -100,6 +101,7 @@ module test_Wrapper_BF #(
 
         #10; // slti instruction line 76 is executed
         assert(dut.RV1.RegFile1.RegBank[18] === 32'h2) else `ERROR("sw instrution is failed", 32'h2, dut.RV1.RegFile1.RegBank[18]);
+        assert(dut.DMEM[0] === 32'h2) else `ERROR("sw instrution is failed", 32'h2, dut.DMEM[0]);
 
         #10; // sltiu instruction line 77 is executed
         assert(dut.RV1.RegFile1.RegBank[19] === 32'h0) else `ERROR("slti instrution is failed", 32'h0, dut.RV1.RegFile1.RegBank[19]);
@@ -117,37 +119,41 @@ module test_Wrapper_BF #(
         assert(dut.RV1.PC === 32'h00400060) else `ERROR("beq instrution is failed", 32'h00400060, dut.RV1.PC);
        
         #10; // bne instruction line 84 is executed
-        assert(dut.RV1.PC === 32'h00400068) else `ERROR("bne instrution is failed", 32'h00400068, dut.RV1.PC);
+        assert(dut.RV1.PC === 32'h00400068) else `ERROR("beq instrution is failed", 32'h00400068, dut.RV1.PC);
 
         #10; // bne instruction line 85 is executed
         assert(dut.RV1.PC === 32'h0040006c) else `ERROR("bne instrution is failed", 32'h0040006c, dut.RV1.PC);
 
         #10; // blt instruction line 88 is executed
-        assert(dut.RV1.PC === 32'h00400074) else `ERROR("blt instrution is failed", 32'h00400074, dut.RV1.PC);
+        assert(dut.RV1.PC === 32'h00400074) else `ERROR("bne instrution is failed", 32'h00400074, dut.RV1.PC);
 
         #10; // blt instruction line 89 is executed
         assert(dut.RV1.PC === 32'h00400078) else `ERROR("blt instrution is failed", 32'h00400078, dut.RV1.PC);
 
         #10; // bge instruction line 92 is executed
-        assert(dut.RV1.PC === 32'h00400080) else `ERROR("bge instrution is failed", 32'h00400080, dut.RV1.PC);
+        assert(dut.RV1.PC === 32'h00400080) else `ERROR("blt instrution is failed", 32'h00400080, dut.RV1.PC);
 
         #10; // bge instruction line 93 is executed
         assert(dut.RV1.PC === 32'h00400084) else `ERROR("bge instrution is failed", 32'h00400084, dut.RV1.PC);
 
         #10; // bltu instruction line 96 is executed
-        assert(dut.RV1.PC === 32'h0040008c) else `ERROR("bltu instrution is failed", 32'h0040008c, dut.RV1.PC);
+        assert(dut.RV1.PC === 32'h0040008c) else `ERROR("bge instrution is failed", 32'h0040008c, dut.RV1.PC);
 
         #10; // bltu instruction line 97 is executed
         assert(dut.RV1.PC === 32'h00400090) else `ERROR("bltu instrution is failed", 32'h00400090, dut.RV1.PC);        
 
-        #10; // bgeu instruction line 96 is executed
-        assert(dut.RV1.PC === 32'h00400098) else `ERROR("bgeu instrution is failed", 32'h00400098, dut.RV1.PC);
+        #10; // bgeu instruction line 100 is executed
+        assert(dut.RV1.PC === 32'h00400098) else `ERROR("bltu instrution is failed", 32'h00400098, dut.RV1.PC);
 
-        #10; // bgeu instruction line 97 is executed
+        #10; // bgeu instruction line 101 is executed
         assert(dut.RV1.PC === 32'h0040009c) else `ERROR("bgeu instrution is failed", 32'h0040009c, dut.RV1.PC);   
 
-        #10; // nop
+        #10; // the immediate instruction line 104 after bgeu_skip
         assert(dut.RV1.RegFile1.RegBank[8] === 32'hffff0000) else `ERROR("probably some branching fails", 32'hffff0000, dut.RV1.RegFile1.RegBank[8]);
+        assert(dut.RV1.PC === 32'h004000a4) else `ERROR("bgeu instrution is failed", 32'h004000a4, dut.RV1.PC);   
+
+        #40; // nop is executed
+        assert(dut.LED_OUT === 8'h0f) else `ERROR("Reading and writing DIPS fails", 8'h0f, dut.LED_OUT);
 
         // ---------------------------------------------------------
         // TEST SUMMARY
