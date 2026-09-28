@@ -11,15 +11,15 @@
 #----------------------------------------------------------------------------------
 
 
-//////////////////////////////////////////////////////////////////////////////////
-// Tesing for RV32I Instructions
-// lui, addi,
-// and(i), or(i), slt(i), sltu(i)
-// auipc, lw
-// sub
-// auipc, sw
-// The assert is delayed 1 cycle because writing only happens at next cycle
-//////////////////////////////////////////////////////////////////////////////////
+#/////////////////////////////////////////////////////////////////////////////////
+# Testing for RV32I Instructions
+# lui, addi,
+# and(i), or(i), slt(i), sltu(i)
+# auipc, lw
+# sub
+# auipc, sw
+# The assert is delayed 1 cycle because writing only happens at next cycle
+#/////////////////////////////////////////////////////////////////////////////////
 
 # This sample program for RISC-V simulation using RARS
 
@@ -101,6 +101,58 @@ bltu_skip:
     bgeu a2, s3, bgeu_skip
 	addi s0, s0, 1
 bgeu_skip:
+	# Register shifts
+	li t0, 1
+	li t1, 4
+	sll t2, t0, t1			# 1 << 4 = 16
+	li t3, 16
+	bne t2, t3, finish
+	srl t2, t2, t1			# 16 >> 4 = 1
+	bne t2, t0, finish
+	li t2, -8
+	sra t2, t2, t1			# -8 >>> 4 = -1
+	li t3, -1
+	bne t2, t3, finish
+
+	# Immediate shifts
+	slli t2, t0, 3			# 1 << 3 = 8
+	li t3, 8
+	bne t2, t3, finish
+	srli t2, t2, 2			# 8 >> 2 = 2
+	li t3, 2
+	bne t2, t3, finish
+	li t2, -8
+	srai t2, t2, 2			# -8 >>> 2 = -2
+	li t3, -2
+	bne t2, t3, finish
+
+	# AUIPC must use the PC of its own instruction
+	auipc t4, 0
+	auipc t5, 0
+	sub t6, t5, t4
+	li t3, 4
+	bne t6, t3, finish
+
+	# JAL without linking: the instruction after the jump must be skipped
+	li t4, 85
+	jal x0, jal_call_start
+	addi t4, zero, 0		# corrupts the sentinel if the jump fails
+
+jal_link_target:
+	auipc t3, 0				# address used to verify the JALR link
+	jalr t2, 0(t1)			# return through the JAL link
+
+jal_call_start:
+	li t5, 85
+	bne t4, t5, finish
+	auipc t0, 0
+	jal t1, jal_link_target
+jal_return:
+	addi t0, t0, 8			# expected JAL link: address after jal
+	bne t1, t0, finish
+	addi t3, t3, 8			# expected JALR link: address after jalr
+	bne t2, t3, finish
+
     addi s1, s0, LED_OFF		# LED address
 	addi s2, s0, DIP_OFF		# DIP address
     lw s4, (s2)                 # Reading DIPS
