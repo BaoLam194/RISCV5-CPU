@@ -148,11 +148,15 @@ module test_Wrapper_BF #(
         #10; // bgeu instruction line 101 is executed
         assert(dut.RV1.PC === 32'h0040009c) else `ERROR("bgeu instrution is failed", 32'h0040009c, dut.RV1.PC);   
 
-        #10; // the immediate instruction line 104 after bgeu_skip
+        #10; // successful bgeu has reached bgeu_skip
         assert(dut.RV1.RegFile1.RegBank[8] === 32'hffff0000) else `ERROR("probably some branching fails", 32'hffff0000, dut.RV1.RegFile1.RegBank[8]);
         assert(dut.RV1.PC === 32'h004000a4) else `ERROR("bgeu instrution is failed", 32'h004000a4, dut.RV1.PC);   
 
-        #40; // nop is executed
+        #430; // extended instruction checks, DIP -> LED write, and final nop are executed
+        assert(dut.RV1.RegFile1.RegBank[31] === 32'h4) else `ERROR("auipc PC difference check is failed", 32'h4, dut.RV1.RegFile1.RegBank[31]);
+        assert(dut.RV1.RegFile1.RegBank[29] === 32'h55) else `ERROR("jal x0 skip check is failed", 32'h55, dut.RV1.RegFile1.RegBank[29]);
+        assert(dut.RV1.RegFile1.RegBank[6] === dut.RV1.RegFile1.RegBank[5]) else `ERROR("jal link check is failed", dut.RV1.RegFile1.RegBank[5], dut.RV1.RegFile1.RegBank[6]);
+        assert(dut.RV1.RegFile1.RegBank[7] === dut.RV1.RegFile1.RegBank[28]) else `ERROR("jalr link check is failed", dut.RV1.RegFile1.RegBank[28], dut.RV1.RegFile1.RegBank[7]);
         assert(dut.LED_OUT === 8'h0f) else `ERROR("Reading and writing DIPS fails", 8'h0f, dut.LED_OUT);
 
         // ---------------------------------------------------------
